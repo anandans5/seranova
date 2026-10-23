@@ -1,0 +1,188 @@
+/* SERANOVA MARK ASSEMBLY — persistent, text-free emblem */
+:root {
+  --sr-mark-gold: #d7a239;
+  --sr-mark-teal: #4fd0c4;
+  --sr-mark-ink: #111414;
+  --sr-mark-ivory: #f7f4ec;
+}
+
+.sr-logo-assembly {
+  position: fixed;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  z-index: 480;
+  box-sizing: border-box;
+  width: 56px;
+  height: 82px;
+  display: grid;
+  place-items: center;
+  padding: 6px;
+  isolation: isolate;
+  perspective: 850px;
+  transform-style: preserve-3d;
+  text-decoration: none;
+  -webkit-tap-highlight-color: transparent;
+  border: 1px solid rgba(177, 126, 39, .52);
+  border-radius: 15px;
+  background: linear-gradient(145deg, rgba(255,253,247,.985), rgba(238,230,212,.965));
+  box-shadow:
+    0 5px 0 rgba(139, 94, 25, .96),
+    0 15px 34px rgba(0,0,0,.27),
+    inset 0 1px 0 rgba(255,255,255,.95),
+    inset 0 -1px 0 rgba(137,94,29,.16);
+  transform: perspective(850px) rotateX(var(--sr-mark-tilt-x, 0deg)) rotateY(var(--sr-mark-tilt-y, 0deg));
+  transition: transform .38s cubic-bezier(.2,.8,.2,1), box-shadow .38s ease, filter .38s ease;
+  contain: layout style;
+}
+
+.sr-logo-assembly::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -5px;
+  border-radius: 18px;
+  border: 1px solid rgba(79,208,196,.39);
+  transform: rotate(-5deg);
+  opacity: .7;
+  animation: srMarkOrbit 10s linear infinite;
+  pointer-events: none;
+}
+
+.sr-logo-assembly::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(118deg, transparent 24%, rgba(255,255,255,.6) 42%, rgba(215,162,57,.26) 48%, transparent 63%);
+  transform: translateX(-115%);
+  animation: srMarkLightSweep 6.6s ease-in-out 1.9s infinite;
+  mix-blend-mode: screen;
+}
+
+.sr-logo-assembly:hover,
+.sr-logo-assembly:focus-visible {
+  transform: perspective(850px) rotateX(-5deg) rotateY(8deg) translateY(-3px);
+  box-shadow: 0 7px 0 rgba(139,94,25,.96), 0 20px 42px rgba(0,0,0,.32), inset 0 1px 0 rgba(255,255,255,.98);
+  filter: saturate(1.08);
+  outline: none;
+}
+.sr-logo-assembly:focus-visible { outline: 2px solid var(--sr-mark-teal); outline-offset: 5px; }
+
+.sr-logo-assembly__stage {
+  position: relative;
+  display: block;
+  width: 34px;
+  height: 64px;
+  max-width: 100%;
+  transform-style: preserve-3d;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sr-logo-shard {
+  position: absolute;
+  inset: 0;
+  display: block;
+  background-image: url("../assets/brand/seranova-mark.png");
+  background-repeat: no-repeat;
+  background-size: 100% 100%;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+  opacity: 1;
+  will-change: transform, opacity, filter;
+  animation: srMarkAssemble 1.28s cubic-bezier(.16,.84,.23,1) both;
+  animation-delay: calc(var(--sr-shard-index, 0) * 36ms);
+}
+
+.sr-logo-assembly__spark {
+  position: absolute;
+  width: 4px;
+  height: 4px;
+  right: 9px;
+  top: 12px;
+  border-radius: 50%;
+  background: var(--sr-mark-teal);
+  box-shadow: 0 0 8px rgba(79,208,196,.9), 0 0 15px rgba(79,208,196,.55);
+  opacity: 0;
+  pointer-events: none;
+  animation: srMarkSpark 4.8s ease-in-out 1.7s infinite;
+}
+
+/* If JavaScript is unavailable, the emblem remains visible as a static badge. */
+body:not(.sr-logo-mounted)::after {
+  content: "";
+  position: fixed;
+  z-index: 480;
+  left: max(14px, env(safe-area-inset-left));
+  bottom: max(18px, env(safe-area-inset-bottom));
+  width: 56px;
+  height: 82px;
+  box-sizing: border-box;
+  border: 1px solid rgba(177,126,39,.52);
+  border-radius: 15px;
+  background: rgba(247,244,236,.98) url("../assets/brand/seranova-mark.png") center/34px 64px no-repeat;
+  box-shadow: 0 5px 0 rgba(139,94,25,.96), 0 15px 34px rgba(0,0,0,.27);
+  pointer-events: none;
+}
+
+@keyframes srMarkAssemble {
+  0% {
+    opacity: 0;
+    filter: blur(2px) brightness(1.65) saturate(1.35);
+    transform: translate3d(var(--sr-shard-x, 0px), var(--sr-shard-y, 0px), var(--sr-shard-z, 90px)) rotateX(var(--sr-shard-rx, 0deg)) rotateY(var(--sr-shard-ry, 0deg)) scale(.72);
+  }
+  60% { opacity: 1; filter: blur(.2px) brightness(1.2) saturate(1.2); }
+  82% { transform: translate3d(0,0,10px) rotateX(0deg) rotateY(0deg) scale(1.025); filter: blur(0) brightness(1.08); }
+  100% { opacity: 1; filter: none; transform: translate3d(0,0,0) rotateX(0deg) rotateY(0deg) scale(1); }
+}
+
+@keyframes srMarkOrbit { from { transform: rotate(-5deg); } to { transform: rotate(355deg); } }
+@keyframes srMarkLightSweep {
+  0%, 18% { opacity: 0; transform: translateX(-115%); }
+  27% { opacity: .8; }
+  43%, 100% { opacity: 0; transform: translateX(115%); }
+}
+@keyframes srMarkSpark { 0%, 100% { opacity: 0; transform: scale(.65); } 22%, 34% { opacity: .95; transform: scale(1.2); } 47% { opacity: .12; transform: scale(.7); } }
+
+@media (max-width: 640px) {
+  .sr-logo-assembly {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(9px, env(safe-area-inset-bottom));
+    width: 32px;
+    height: 58px;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    filter: drop-shadow(0 0 1px rgba(255,250,239,.78)) drop-shadow(0 0 8px rgba(215,162,57,.55));
+  }
+  .sr-logo-assembly::before { display: none; }
+  .sr-logo-assembly::after { border-radius: 0; }
+  .sr-logo-assembly__stage { width: 27px; height: 50.7px; }
+  body:not(.sr-logo-mounted)::after {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(9px, env(safe-area-inset-bottom));
+    width: 32px;
+    height: 58px;
+    border: 0;
+    border-radius: 0;
+    background: transparent url("../assets/brand/seranova-mark.png") center/27px 50.7px no-repeat;
+    box-shadow: none;
+    filter: drop-shadow(0 0 1px rgba(255,250,239,.78)) drop-shadow(0 0 8px rgba(215,162,57,.55));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sr-logo-assembly,
+  .sr-logo-assembly::before,
+  .sr-logo-assembly::after,
+  .sr-logo-shard,
+  .sr-logo-assembly__spark { animation: none !important; transition: none !important; }
+  .sr-logo-shard { opacity: 1 !important; filter: none !important; transform: none !important; }
+  .sr-logo-assembly::before { transform: rotate(-5deg); }
+}
