@@ -1,30 +1,61 @@
 document.addEventListener("DOMContentLoaded", () => {
   /* =====================================================
-       MOBILE NAVIGATION
+       MOBILE NAVIGATION — touch-safe, keyboard-accessible
     ===================================================== */
 
   const menu = document.querySelector(".menu");
-  const links = document.querySelector(".links");
+  const links = document.querySelector("#main-navigation") || document.querySelector(".links");
+  const mobileNavQuery = window.matchMedia("(max-width: 1200px)");
 
-  menu?.addEventListener("click", () => {
-    if (!links) return;
-    const open = links.classList.toggle("open");
+  const setMenuOpen = (shouldOpen) => {
+    if (!menu || !links) return;
+    links.classList.toggle("open", shouldOpen);
+    menu.setAttribute("aria-expanded", String(shouldOpen));
+    menu.setAttribute("aria-label", shouldOpen ? "Close navigation" : "Open navigation");
+    menu.setAttribute("aria-controls", links.id || "main-navigation");
+    document.body.classList.toggle("mobile-nav-open", shouldOpen);
+  };
 
-    menu.setAttribute("aria-expanded", open);
-  });
+  if (menu && links) {
+    // Set a deterministic initial state, even if the browser restores page state.
+    setMenuOpen(false);
 
-  links?.addEventListener("click", (event) => {
-    if (!event.target.closest("a")) return;
-    links.classList.remove("open");
-    menu?.setAttribute("aria-expanded", "false");
-  });
+    menu.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setMenuOpen(!links.classList.contains("open"));
+    });
 
-  document.addEventListener("keydown", (event) => {
-    if (event.key !== "Escape" || !links?.classList.contains("open")) return;
-    links.classList.remove("open");
-    menu?.setAttribute("aria-expanded", "false");
-    menu?.focus();
-  });
+    links.addEventListener("click", (event) => {
+      const link = event.target instanceof Element ? event.target.closest("a") : null;
+      if (link) setMenuOpen(false);
+    });
+
+    // Close only when the user taps outside the menu or its toggle.
+    document.addEventListener("click", (event) => {
+      if (!links.classList.contains("open")) return;
+      const target = event.target;
+      if (target instanceof Node && !links.contains(target) && !menu.contains(target)) {
+        setMenuOpen(false);
+      }
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key !== "Escape" || !links.classList.contains("open")) return;
+      setMenuOpen(false);
+      menu.focus();
+    });
+
+    const closeOnDesktop = () => {
+      if (!mobileNavQuery.matches) setMenuOpen(false);
+    };
+    if (typeof mobileNavQuery.addEventListener === "function") {
+      mobileNavQuery.addEventListener("change", closeOnDesktop);
+    } else {
+      // Safari versions that only implement the older MediaQueryList API.
+      mobileNavQuery.addListener(closeOnDesktop);
+    }
+  }
 
   /* =====================================================
        GALLERY FILTERS
