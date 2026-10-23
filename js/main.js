@@ -1,55 +1,54 @@
 document.addEventListener("DOMContentLoaded", () => {
   /* =====================================================
-       MOBILE NAVIGATION — robust touch + click handling
+       MOBILE NAVIGATION — reliable tap toggle
     ===================================================== */
-  const nav = document.querySelector(".nav");
-  const menu = nav?.querySelector(".menu");
-  const links = nav?.querySelector(".links");
+  const navRoot = document.querySelector(".nav");
+  const menu = navRoot?.querySelector(".menu");
+  const links = navRoot?.querySelector(".links");
 
-  if (menu && links) {
-    // Make sure the button controls the actual menu in every HTML page.
+  if (menu && links && !menu.dataset.mobileNavBound) {
+    menu.dataset.mobileNavBound = "true";
     menu.setAttribute("aria-controls", links.id || "main-navigation");
     if (!links.id) links.id = "main-navigation";
-    menu.setAttribute("aria-expanded", "false");
 
-    const isMobileNav = () => window.matchMedia("(max-width: 1100px)").matches;
-    const setMenuOpen = (open) => {
+    const mobileQuery = window.matchMedia("(max-width: 1100px)");
+    const isOpen = () => links.classList.contains("open");
+
+    const setOpen = (open) => {
       links.classList.toggle("open", open);
-      links.classList.toggle("is-open", open);
-      menu.classList.toggle("is-open", open);
       menu.setAttribute("aria-expanded", String(open));
       menu.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
-      document.body.classList.toggle("mobile-nav-open", open && isMobileNav());
+      menu.textContent = open ? "×" : "☰";
+      document.body.classList.toggle("mobile-nav-open", open && mobileQuery.matches);
     };
 
-    // Prevent duplicate event binding if scripts are injected more than once.
-    if (!menu.dataset.mobileNavReady) {
-      menu.dataset.mobileNavReady = "true";
-      menu.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setMenuOpen(!(links.classList.contains("open") || links.classList.contains("is-open")));
-      });
+    // Native click covers mouse, keyboard, and touch-generated clicks.
+    menu.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setOpen(!isOpen());
+    });
 
-      links.addEventListener("click", (event) => {
-        if (event.target.closest("a")) setMenuOpen(false);
-      });
+    links.addEventListener("click", (event) => {
+      if (event.target.closest("a")) setOpen(false);
+    });
 
-      document.addEventListener("click", (event) => {
-        if (isMobileNav() && !nav.contains(event.target)) setMenuOpen(false);
-      });
+    document.addEventListener("click", (event) => {
+      if (mobileQuery.matches && isOpen() && !navRoot.contains(event.target)) setOpen(false);
+    });
 
-      document.addEventListener("keydown", (event) => {
-        if (event.key === "Escape" && (links.classList.contains("open") || links.classList.contains("is-open"))) {
-          setMenuOpen(false);
-          menu.focus();
-        }
-      });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && isOpen()) {
+        setOpen(false);
+        menu.focus();
+      }
+    });
 
-      window.addEventListener("resize", () => {
-        if (!isMobileNav()) setMenuOpen(false);
-      }, { passive: true });
-    }
+    const resetForViewport = () => {
+      if (!mobileQuery.matches) setOpen(false);
+    };
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener("change", resetForViewport);
+    else mobileQuery.addListener(resetForViewport);
   }
 
   /* =====================================================
@@ -322,7 +321,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (repeat > 0) card.setAttribute("aria-hidden", "true");
 
         const logo = document.createElement("img");
-        logo.src = `assets/brands/${brand.file}`;
+        logo.src = `brands/${brand.file}`;
         logo.alt = repeat === 0 ? brand.name : "";
         logo.width = 66;
         logo.height = 30;
