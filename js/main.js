@@ -1,59 +1,54 @@
 document.addEventListener("DOMContentLoaded", () => {
   /* =====================================================
-       MOBILE NAVIGATION — touch-safe, keyboard-accessible
+       MOBILE NAVIGATION — robust touch + click handling
     ===================================================== */
-
-  const menu = document.querySelector(".menu");
-  const links = document.querySelector("#main-navigation") || document.querySelector(".links");
-  const mobileNavQuery = window.matchMedia("(max-width: 1200px)");
-
-  const setMenuOpen = (shouldOpen) => {
-    if (!menu || !links) return;
-    links.classList.toggle("open", shouldOpen);
-    menu.setAttribute("aria-expanded", String(shouldOpen));
-    menu.setAttribute("aria-label", shouldOpen ? "Close navigation" : "Open navigation");
-    menu.setAttribute("aria-controls", links.id || "main-navigation");
-    document.body.classList.toggle("mobile-nav-open", shouldOpen);
-  };
+  const nav = document.querySelector(".nav");
+  const menu = nav?.querySelector(".menu");
+  const links = nav?.querySelector(".links");
 
   if (menu && links) {
-    // Set a deterministic initial state, even if the browser restores page state.
-    setMenuOpen(false);
+    // Make sure the button controls the actual menu in every HTML page.
+    menu.setAttribute("aria-controls", links.id || "main-navigation");
+    if (!links.id) links.id = "main-navigation";
+    menu.setAttribute("aria-expanded", "false");
 
-    menu.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setMenuOpen(!links.classList.contains("open"));
-    });
-
-    links.addEventListener("click", (event) => {
-      const link = event.target instanceof Element ? event.target.closest("a") : null;
-      if (link) setMenuOpen(false);
-    });
-
-    // Close only when the user taps outside the menu or its toggle.
-    document.addEventListener("click", (event) => {
-      if (!links.classList.contains("open")) return;
-      const target = event.target;
-      if (target instanceof Node && !links.contains(target) && !menu.contains(target)) {
-        setMenuOpen(false);
-      }
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key !== "Escape" || !links.classList.contains("open")) return;
-      setMenuOpen(false);
-      menu.focus();
-    });
-
-    const closeOnDesktop = () => {
-      if (!mobileNavQuery.matches) setMenuOpen(false);
+    const isMobileNav = () => window.matchMedia("(max-width: 1100px)").matches;
+    const setMenuOpen = (open) => {
+      links.classList.toggle("open", open);
+      links.classList.toggle("is-open", open);
+      menu.classList.toggle("is-open", open);
+      menu.setAttribute("aria-expanded", String(open));
+      menu.setAttribute("aria-label", open ? "Close navigation" : "Open navigation");
+      document.body.classList.toggle("mobile-nav-open", open && isMobileNav());
     };
-    if (typeof mobileNavQuery.addEventListener === "function") {
-      mobileNavQuery.addEventListener("change", closeOnDesktop);
-    } else {
-      // Safari versions that only implement the older MediaQueryList API.
-      mobileNavQuery.addListener(closeOnDesktop);
+
+    // Prevent duplicate event binding if scripts are injected more than once.
+    if (!menu.dataset.mobileNavReady) {
+      menu.dataset.mobileNavReady = "true";
+      menu.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setMenuOpen(!(links.classList.contains("open") || links.classList.contains("is-open")));
+      });
+
+      links.addEventListener("click", (event) => {
+        if (event.target.closest("a")) setMenuOpen(false);
+      });
+
+      document.addEventListener("click", (event) => {
+        if (isMobileNav() && !nav.contains(event.target)) setMenuOpen(false);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && (links.classList.contains("open") || links.classList.contains("is-open"))) {
+          setMenuOpen(false);
+          menu.focus();
+        }
+      });
+
+      window.addEventListener("resize", () => {
+        if (!isMobileNav()) setMenuOpen(false);
+      }, { passive: true });
     }
   }
 
